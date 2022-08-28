@@ -10,6 +10,7 @@ django-environ
 django-stubs-ext
 django-user-agents
 elasticsearch-dsl>=7.0.0,<8.0.0
+enlighten
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
@@ -20,4 +21,3 @@ pre-commit
 psycopg2-binary
 pytest-django
 ratelimit
-tqdm

@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, Optional, Type
 
 import googleapiclient.errors
 from attr import define
-from tqdm import tqdm
 
 from django.db.models import TextChoices
 from django.utils.translation import gettext_lazy
@@ -102,9 +101,9 @@ class GoogleDrive(SourceType):
     @staticmethod
     def get_all_folders(sources: list["Source"]) -> dict[str, Optional[Folder]]:
         service = find_or_create_google_drive_service()
-        print("Retrieving Google Drive folders...")
-        bar = tqdm(total=len(sources))
+        print("Retrieving Google Drive folders... ", end="", flush=True)
         folders: dict[str, Optional[Folder]] = {}
+        failed_drives: set[str] = set()
         for x in sources:
             try:
                 if folder := execute_google_drive_api_call(service.files().get(fileId=x.identifier)):
@@ -113,11 +112,14 @@ class GoogleDrive(SourceType):
                     raise KeyError
             except (googleapiclient.errors.HttpError, KeyError):
                 folders[x.key] = None
-                print(f"Failed on drive: {x.key}")
-            finally:
-                bar.update(1)
+                failed_drives.add(x.key)
 
-        print("...and done!")
+        print("and done!")
+        if failed_drives:
+            print(
+                f"Failed to retrieve the root Google Drive folders for the following sources: "
+                f"{', '.join(sorted([f'**{x}**' for x in failed_drives]))}"
+            )
         return folders
 
     @staticmethod

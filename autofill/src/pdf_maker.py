@@ -33,9 +33,7 @@ class PdfExporter:
         num_images = len(self.order.fronts.cards) + len(self.order.backs.cards)
         status_format = "State: {state}"
         self.status_bar = self.manager.status_bar(
-            status_format=status_format,
-            state=f"{TEXT_BOLD}{self.state}{TEXT_END}",
-            position=1,
+            status_format=status_format, state=f"{TEXT_BOLD}{self.state}{TEXT_END}", position=1
         )
         self.download_bar = self.manager.counter(total=num_images, desc="Images Downloaded", position=2)
         self.processed_bar = self.manager.counter(total=num_images, desc="Images Processed", position=3)

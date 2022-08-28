@@ -40,6 +40,5 @@ repos:
           "Markdown",
           "pytest",
           "ratelimit",
-          "tqdm",
         ]
         pass_filenames: false

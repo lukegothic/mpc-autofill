@@ -1,7 +1,10 @@
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from itertools import groupby
 from typing import Optional, Type
+
+import enlighten
 
 from django.conf import settings
 from django.db import transaction
@@ -15,29 +18,50 @@ MAX_WORKERS = 5
 DPI_HEIGHT_RATIO = 300 / 1110  # 300 DPI for image of vertical resolution 1110 pixels
 
 
-def add_images_in_folder_to_list(source_type: Type[SourceType], folder: Folder, image_list: list[Image]) -> None:
-    image_list += source_type.get_all_images_inside_folder(folder)
+@dataclass
+class StatusBars:
+    manager: enlighten.Manager
+    status_bar: enlighten.StatusBar
+    folders_located_bar: enlighten.Counter
+    images_located_bar: enlighten.Counter
 
 
-def explore_folder(source: Source, source_type: Type[SourceType], root_folder: Folder) -> list[Image]:
+def add_images_in_folder_to_list(
+    source_type: Type[SourceType], folder: Folder, image_list: list[Image], bars: StatusBars
+) -> None:
+    images_inside_folder = source_type.get_all_images_inside_folder(folder)
+    image_list += images_inside_folder
+    bars.images_located_bar.update(incr=len(images_inside_folder))
+    # bars.images_located_bar.refresh(flush=True)
+
+
+def explore_folder(source: Source, source_type: Type[SourceType], root_folder: Folder, bars: StatusBars) -> list[Image]:
     """
     Explore `folder` and all nested folders to extract all images contained within them.
     """
 
     t0 = time.time()
+    bars.images_located_bar.clear(flush=True)
+    bars.folders_located_bar.clear(flush=True)
     print(f"Locating images for source {TEXT_BOLD}{source.name}{TEXT_END}...", end="")
     image_list: list[Image] = []
     folder_list: list[Folder] = [root_folder]
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
         while len(folder_list) > 0:
             folder = folder_list.pop()
-            pool.submit(add_images_in_folder_to_list, source_type=source_type, folder=folder, image_list=image_list)
+            pool.submit(
+                add_images_in_folder_to_list, source_type=source_type, folder=folder, image_list=image_list, bars=bars
+            )
             sub_folders = source_type.get_all_folders_inside_folder(folder)
-            folder_list += list(filter(lambda x: not x.name.startswith("!"), sub_folders))
+            valid_sub_folders = list(filter(lambda x: not x.name.startswith("!"), sub_folders))
+            folder_list += valid_sub_folders
+            bars.folders_located_bar.update(incr=len(valid_sub_folders))
+            # bars.folders_located_bar.refresh(flush=True)
     print(
         f" and done! Located {TEXT_BOLD}{len(image_list):,}{TEXT_END} images "
         f"in {TEXT_BOLD}{(time.time() - t0):.2f}{TEXT_END} seconds."
     )
+
     return image_list
 
 
@@ -152,8 +176,15 @@ def bulk_sync_objects(source: Source, cards: list[Card], cardbacks: list[Cardbac
     print(f" and done! That took {TEXT_BOLD}{(time.time() - t0):.2f}{TEXT_END} seconds.")
 
 
-def update_database_for_source(source: Source, source_type: Type[SourceType], root_folder: Folder) -> None:
-    images = explore_folder(source=source, source_type=source_type, root_folder=root_folder)
+def update_database_for_source(
+    source: Source, source_type: Type[SourceType], root_folder: Folder, bars: StatusBars
+) -> None:
+    bars.status_bar.update(
+        source=f"{TEXT_BOLD}{source.name}{TEXT_END}",
+        source_type=f"{TEXT_BOLD}{source_type.get_identifier().label}{TEXT_END}",
+    )
+    # bars.status_bar.refresh()
+    images = explore_folder(source=source, source_type=source_type, root_folder=root_folder, bars=bars)
     cards, cardbacks, tokens = transform_images_into_objects(source=source, images=images)
     bulk_sync_objects(source=source, cards=cards, cardbacks=cardbacks, tokens=tokens)
 
@@ -164,12 +195,38 @@ def update_database(source_key: Optional[str] = None) -> None:
     If `source_key` is specified, only update that source; otherwise, update all sources.
     """
 
+    manager = enlighten.get_manager()
+    status_format = "Source: {source}, Source type: {source_type}"
+    status_bar = manager.status_bar(
+        status_format=status_format,
+        source=f"{TEXT_BOLD}N/A{TEXT_END}",
+        source_type=f"{TEXT_BOLD}N/A{TEXT_END}",
+        position=1,
+    )
+    folders_located_bar = manager.counter(
+        total=None, desc="Located", unit="folders", format="{desc} {count:d} {unit} {elapsed}", position=2
+    )
+    images_located_bar = manager.counter(
+        total=None, desc="Located", unit="images", format="{desc} {count:d} {unit} {elapsed}", position=3
+    )
+
+    # status_bar.refresh()
+    # folders_located_bar.refresh()
+    # images_located_bar.refresh()
+
+    bars = StatusBars(
+        manager=manager,
+        status_bar=status_bar,
+        folders_located_bar=folders_located_bar,
+        images_located_bar=images_located_bar,
+    )
+
     if source_key:
         try:
             source = Source.objects.get(key=source_key)
             source_type = SourceTypeChoices.get_source_type(SourceTypeChoices[source.source_type])
             if (root_folder := source_type.get_all_folders([source])[source.key]) is not None:
-                update_database_for_source(source=source, source_type=source_type, root_folder=root_folder)
+                update_database_for_source(source=source, source_type=source_type, root_folder=root_folder, bars=bars)
         except Source.DoesNotExist:
             print(
                 f"Invalid source specified: {TEXT_BOLD}{source_key}{TEXT_END}"
@@ -191,5 +248,11 @@ def update_database(source_key: Optional[str] = None) -> None:
             )
             for grouped_source in grouped_sources:
                 if (root_folder := folders[grouped_source.key]) is not None:
-                    update_database_for_source(source=grouped_source, source_type=source_type, root_folder=root_folder)
+                    update_database_for_source(
+                        source=grouped_source, source_type=source_type, root_folder=root_folder, bars=bars
+                    )
                     print("")
+    status_bar.clear()
+    images_located_bar.clear()
+    folders_located_bar.clear()
+    manager.stop()
