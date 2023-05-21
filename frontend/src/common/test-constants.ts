@@ -6,9 +6,7 @@ import { Card, MaximumDPI, MaximumSize, MinimumDPI } from "@/common/constants";
 import {
   BackendState,
   CardDocument,
-  CardDocumentsState,
   Project,
-  SearchResultsState,
   SearchSettings,
   SourceDocument,
   SourceDocuments,

@@ -3,29 +3,25 @@
  * drop into a page (as the only component). Must be wrapped with a Redux provider.
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
-import { useDispatch, useSelector } from "react-redux";
-import { ThunkDispatch } from "redux-thunk";
+import { useSelector } from "react-redux";
 
+import { useGetSourcesQuery } from "@/app/api";
 import { RootState } from "@/app/store";
+import { selectBackendURL } from "@/features/backend/backendSlice";
 import { CardGrid } from "@/features/card/cardGrid";
 import { CommonCardback } from "@/features/card/commonCardback";
 import { Import } from "@/features/import/import";
 import { ProjectStatus } from "@/features/project/projectStatus";
-import { fetchSourceDocuments } from "@/features/search/sourceDocumentsSlice";
 import { SearchSettings } from "@/features/searchSettings/searchSettings";
 import DisableSSR from "@/features/ui/disableSSR";
 import { ViewSettings } from "@/features/viewSettings/viewSettings";
 
 function App() {
-  const dispatch = useDispatch<ThunkDispatch<any, any, any>>();
   const cardback =
     useSelector((state: RootState) => state.project.cardback) ?? undefined;
-  useEffect(() => {
-    dispatch(fetchSourceDocuments());
-  }, [dispatch]);
 
   return (
     <Row>

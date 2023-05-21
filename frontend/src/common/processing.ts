@@ -146,9 +146,11 @@ export function processLine(line: string, dfcPairs: DFCPairs): ProcessedLine {
     frontQuery?.query != null &&
     frontQuery.query in dfcPairs
   ) {
-    // attempt to match to DFC pair
-    // TODO: is it problematic to assume that all DFC pairs are the `Card` type?
-    backQuery = { query: dfcPairs[frontQuery.query], card_type: Card };
+    // attempt to match to DFC pair and assume the back card is the same type as the front card
+    backQuery = {
+      query: dfcPairs[frontQuery.query],
+      card_type: frontQuery.card_type,
+    };
   }
 
   return [
@@ -238,10 +240,4 @@ export function standardiseURL(url: string): string {
 
   const re = [...url.matchAll(/^(https?:\/\/)?(.*?)(?:\/.*)?$/gm)][0];
   return (re[1] ?? "https://") + re[2];
-}
-
-// TODO: delete this when remaining API interactions have been moved to RTK query
-export function formatURL(backendURL: string, routeURL: string): string {
-  // TODO: implement this properly
-  return backendURL + routeURL;
 }

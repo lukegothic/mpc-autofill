@@ -16,7 +16,6 @@ export const backendSlice = createSlice({
   initialState,
   reducers: {
     setURL: (state: RootState, action) => {
-      // TODO: can we force queries to re-fetch when we change the URL here?
       state.url = action.payload;
     },
     clearURL: (state: RootState) => {

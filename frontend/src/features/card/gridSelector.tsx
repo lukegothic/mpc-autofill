@@ -15,9 +15,11 @@ import Stack from "react-bootstrap/Stack";
 import Toggle from "react-bootstrap-toggle";
 import { useDispatch, useSelector } from "react-redux";
 
+import { useGetSourcesQuery } from "@/app/api";
 import { RootState } from "@/app/store";
 import { ToggleButtonHeight } from "@/common/constants";
-import { CardDocument } from "@/common/types";
+import { CardDocument, SourceDocument } from "@/common/types";
+import { selectBackendURL } from "@/features/backend/backendSlice";
 import { MemoizedCard } from "@/features/card/card";
 import {
   makeAllSourcesInvisible,
@@ -182,13 +184,16 @@ export function GridSelector(props: GridSelectorProps) {
     [props]
   );
 
-  // TODO: move these selectors into a common area where they can be reused
-  const sourceKeyToName = useSelector((state: RootState) =>
-    Object.fromEntries(
-      Object.keys(state.sourceDocuments.sourceDocuments ?? {}).map((pk) => [
-        state.sourceDocuments.sourceDocuments[pk].key,
-        state.sourceDocuments.sourceDocuments[pk].name,
-      ])
+  const backendURL = useSelector(selectBackendURL);
+  const sourcesQuery = useGetSourcesQuery(undefined, {
+    skip: backendURL == null,
+  });
+  const sourceKeyToName = Object.fromEntries(
+    Object.values(sourcesQuery.data ?? {}).map(
+      (sourceDocument: SourceDocument) => [
+        sourceDocument.key,
+        sourceDocument.name,
+      ]
     )
   );
   const sourceKeys = Object.keys(sourceKeyToName);

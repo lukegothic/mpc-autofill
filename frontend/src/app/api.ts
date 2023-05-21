@@ -11,6 +11,7 @@ import {
 
 import { RootState } from "@/app/store";
 import { QueryTags } from "@/common/constants";
+import { processQuery } from "@/common/processing";
 import {
   BackendInfo,
   CardDocument,
@@ -150,64 +151,3 @@ export const {
   useGetContributionsQuery,
   useGetBackendInfoQuery,
 } = apiSlice;
-
-import { getCSRFHeader } from "@/common/cookies";
-import { formatURL, processQuery } from "@/common/processing";
-
-export async function APIGetCards(
-  backendURL: string,
-  identifiersToSearch: Set<string>
-): Promise<CardDocuments> {
-  const rawResponse = await fetch(formatURL(backendURL, "/2/cards/"), {
-    method: "POST",
-    body: JSON.stringify({
-      card_identifiers: Array.from(identifiersToSearch),
-    }),
-    credentials: "same-origin",
-    headers: getCSRFHeader(),
-  });
-  const content = await rawResponse.json();
-  return content.results;
-}
-
-export async function APIGetCardbacks(
-  backendURL: string
-): Promise<Array<string>> {
-  const rawResponse = await fetch(formatURL(backendURL, "/2/cardbacks/"), {
-    method: "GET",
-    credentials: "same-origin",
-    headers: getCSRFHeader(),
-  });
-  const content = await rawResponse.json();
-  return content.cardbacks;
-}
-
-export async function APISearch(
-  backendURL: string,
-  searchSettings: SearchSettings,
-  queriesToSearch: Array<SearchQuery>
-): Promise<SearchResults> {
-  const rawResponse = await fetch(formatURL(backendURL, "/2/searchResults/"), {
-    method: "POST",
-    body: JSON.stringify({
-      searchSettings,
-      queries: Array.from(queriesToSearch),
-    }),
-    credentials: "same-origin",
-    headers: getCSRFHeader(),
-  });
-  const content = await rawResponse.json();
-  return content.results;
-}
-
-export async function APIGetSources(
-  backendURL: string
-): Promise<SourceDocuments> {
-  const rawResponse = await fetch(formatURL(backendURL, "/2/sources/"), {
-    method: "GET",
-    credentials: "same-origin",
-    headers: getCSRFHeader(),
-  });
-  const content = await rawResponse.json();
-  return content.results;
-}

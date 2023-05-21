@@ -36,18 +36,6 @@ export interface CardDocuments {
   [key: string]: CardDocument;
 }
 
-export interface CardDocumentsState {
-  cardDocuments: CardDocuments;
-  status: "idle" | "loading" | "succeeded" | "failed";
-  error: string | null;
-}
-
-export interface CardbacksState {
-  cardbacks: Array<string>;
-  status: "idle" | "loading" | "succeeded" | "failed";
-  error: string | null;
-}
-
 // TODO: create json schemas for these, infer types from them, and see if we can define the schema once between frontend and backend
 // TODO: it seems DRF serialisers can accomplish this: https://www.django-rest-framework.org/api-guide/serializers/
 export interface SourceDocument {
@@ -65,22 +53,12 @@ export interface SourceDocuments {
   [pk: number]: SourceDocument;
 }
 
-export interface SourceDocumentsState {
-  sourceDocuments?: SourceDocuments; // null indicates the data has not yet loaded from the backend
-}
-
 export type SearchResultsForQuery = {
   [card_type in CardType]: Array<string>;
 };
 
 export interface SearchResults {
   [query: string]: SearchResultsForQuery;
-}
-
-export interface SearchResultsState {
-  searchResults: SearchResults;
-  status: string;
-  error: string | null;
 }
 
 export interface SourceContribution {

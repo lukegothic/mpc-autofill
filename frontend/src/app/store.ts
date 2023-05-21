@@ -3,11 +3,7 @@ import { combineReducers, configureStore, Store } from "@reduxjs/toolkit";
 
 import { apiSlice } from "@/app/api";
 import backendReducer from "@/features/backend/backendSlice";
-import cardbacksReducer from "@/features/card/cardbackSlice";
 import projectReducer from "@/features/project/projectSlice";
-import cardDocumentsReducer from "@/features/search/cardDocumentsSlice";
-import searchResultsReducer from "@/features/search/searchResultsSlice";
-import sourceDocumentsReducer from "@/features/search/sourceDocumentsSlice";
 import searchSettingsReducer from "@/features/searchSettings/searchSettingsSlice";
 import viewSettingsReducer from "@/features/viewSettings/viewSettingsSlice";
 
@@ -16,10 +12,6 @@ const rootReducer = combineReducers({
   [apiSlice.reducerPath]: apiSlice.reducer,
   viewSettings: viewSettingsReducer,
   searchSettings: searchSettingsReducer,
-  searchResults: searchResultsReducer,
-  cardDocuments: cardDocumentsReducer,
-  cardbacks: cardbacksReducer,
-  sourceDocuments: sourceDocumentsReducer,
   project: projectReducer,
   backend: backendReducer,
 });
