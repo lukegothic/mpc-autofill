@@ -67,9 +67,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "django_elasticsearch_dsl",
-    "crispy_forms",
-    "django_user_agents",
-    "widget_tweaks",
     "corsheaders",
 ]
 
@@ -83,7 +80,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_user_agents.middleware.UserAgentMiddleware",
 ]
 
 CORS_ALLOWED_ORIGINS = env.list(
@@ -105,8 +101,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "cardpicker.context_processors.add_site_info",
-                "cardpicker.context_processors.common_info",
             ],
         },
     },
