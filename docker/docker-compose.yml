@@ -9,14 +9,14 @@ services:
   postgres:
     image: postgres:15.0-alpine
     container_name: mpcautofill_postgres
-    expose:
-      - 5432
     environment:
       - POSTGRES_DB=mpcautofill
       - POSTGRES_USER=mpcautofill
       - POSTGRES_PASSWORD=mpcautofill
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   # Elasticsearch used by MPCAutofill
   elasticsearch:
